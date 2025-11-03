@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Web Game</title>
+    <style>
+        
+        canvas {
+            background-color: #0a0000;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let play = {
+            x: 280,
+            y: 350,
+            width: 40,
+            height: 40,
+            color: 'green',
+            speed: 5
+        };
+
+        let keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function update() {
+            if (keys['ArrowLeft']) {
+                player.x -= Player.speed;
+            }
+            if (keys['ArrowRight']) {
+                player.x += player.speed;
+            }
+
+            // keep player within canvas
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+
+        function draw () {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = player.color;
+            ctx.fllRect(player.x, player.y, player.width, player.height);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        let player = {
+            x: 280,
+            y: 350,
+            width: 40,
+            height: 40,
+            color: 'green',
+            speed: 5,
+            velocityY: 0,
+            gravity: 0.5,
+            jumpingStrength: -10,
+            grounded: true
+        };
+        
+        function update() {
+            // Horizontal movement
+            if (keys['ArrowLeft']) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight']) {
+                player.x += player.speed;
+            }
+
+            // Jumping
+            if (keys['ArrowUp'] && player.grounded) {
+                player.velocityY = player.jumpStrength;
+                player.grounded = false;
+            }
+
+            // Apply gravity
+            player.velocityY += player.gravity;
+            player.y += player.velocityY;
+
+            // Ground collision
+            if (player.y + player.height >= canvas.height) {
+                player.y = canvas.height - player.height;
+                player.velocityY = 0;
+                player.grounded = true;
+            }
+
+            // Keep player within canvas horizontally
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+
+        let enemy = {
+            x: 100,
+            y: 350,
+            width: 40,
+            height: 40,
+            color: 'red',
+            speed: 2,
+            direction: 1
+        };
+
+        // Move enemy
+        enemy.x += enemy.speed * enemy.direction;
+
+        // Bounce enemy off edges
+        if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+            enemy.direction *= -1;
+        }
+
+        function checkCollision(a, b) {
+            return (
+                a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y
+            );
+        }
+
+        if (checkCollision(player, enemy)) {
+            console.log("Player hit by enemy!");
+        }
+
+        ctx.fillStyle = enemy.color;
+        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+        let score = 0;
+        let gameOver = false;
+
+        if (checkCollision(player, enemy)) {
+        gameOver = true;
+        }
+
+        // Draw score
+ctx.fillStyle = 'black';
+ctx.font = '20px Arial';
+ctx.fillText('Score: ' + score, 10, 30);
+
+// Game over message
+if (gameOver) {
+  ctx.fillStyle = 'red';
+  ctx.font = '40px Arial';
+  ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+}
+
+function gameLoop() {
+  if (!gameOver) {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  } else {
+    draw(); // Draw one last time to show "Game Over"
+  }
+}
+
+score++;
+<button id="restartBtn" style="display:none;">Restart</button>
+
+const restartBtn = document.getElementById('restartBtn');
+
+restartBtn.addEventListener('click', () => {
+  // Reset game state
+  player.x = 280;
+  player.y = 350;
+  player.velocityY = 0;
+  player.grounded = true;
+
+  enemy.x = 100;
+  enemy.direction = 1;
+
+  score = 0;
+  gameOver = false;
+  restartBtn.style.display = 'none';
+  gameLoop(); // Restart the loop
+});
+
+if (gameOver) {
+  draw();
+  restartBtn.style.display = 'block';
+}
+
+else {
+  draw(); // Show Game Over screen
+  restartBtn.style.display = 'block';
+}
+
+let enemies = [
+  { x: 100, y: 350, width: 40, height: 40, color: 'red', speed: 2, direction: 1 },
+  { x: 400, y: 350, width: 40, height: 40, color: 'red', speed: 3, direction: -1 }
+];
+
+enemies.forEach(enemy => {
+  enemy.x += enemy.speed * enemy.direction;
+
+  if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+    enemy.direction *= -1;
+  }
+
+  if (checkCollision(player, enemy)) {
+    health--; // We'll add health next
+    if (health <= 0) {
+      gameOver = true;
+    }
+  }
+});
+
+enemies.forEach(enemy => {
+  ctx.fillStyle = enemy.color;
+  ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+});
+
+let collectibles = [
+  { x: 200, y: 300, width: 20, height: 20, color: 'gold', collected: false },
+  { x: 350, y: 250, width: 20, height: 20, color: 'gold', collected: false }
+];
+
+collectibles.forEach(item => {
+  if (!item.collected && checkCollision(player, item)) {
+    item.collected = true;
+    score += 100; // Add points for collecting
+  }
+});
+
+collectibles.forEach(item => {
+  if (!item.collected) {
+    ctx.fillStyle = item.color;
+    ctx.fillRect(item.x, item.y, item.width, item.height);
+  }
+});
+
+let health = 3; // Player starts with 3 lives
+
+enemies.forEach(enemy => {
+  enemy.x += enemy.speed * enemy.direction;
+
+  if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+    enemy.direction *= -1;
+  }
+
+  if (checkCollision(player, enemy)) {
+    if (!enemy.hit) {
+      health--;
+      enemy.hit = true; // Prevent repeated hits
+      setTimeout(() => { enemy.hit = false; }, 1000); // Cooldown
+    }
+
+    if (health <= 0) {
+      gameOver = true;
+    }
+  }
+});
+
+ctx.fillStyle = 'black';
+ctx.font = '20px Arial';
+ctx.fillText('Health: ' + health, 10, 60);
+
+let level = 1;
+
+if (score >= 500) {
+  level = 2;
+} else if (score >= 1000) {
+  level = 3;
+}
+
+enemy.x += (enemy.speed + level - 1) * enemy.direction;
+
+ctx.fillStyle = 'black';
+ctx.font = '20px Arial';
+ctx.fillText('Level: ' + level, 10, 90);
+
+<audio id="jumpSound" src="jump.mp3" preload="auto"></audio>
+<audio id="hitSound" src="hit.mp3" preload="auto"></audio>
+
+const jumpSound = document.getElementById('jumpSound');
+const hitSound = document.getElementById('hitSound');
+
+if (keys['ArrowUp'] && player.grounded) {
+  player.velocityY = player.jumpStrength;
+  player.grounded = false;
+  jumpSound.play();
+}
+
+if (!enemy.hit) {
+  health--;
+  enemy.hit = true;
+  hitSound.play();
+  setTimeout(() => { enemy.hit = false; }, 1000);
+}
+
+git init
+git add .
+git commit -m "Initial game upload"
+git remote add origin https://github.com/yourusername/my-game.git
+git push -u origin main
+
+https://yourusername.github.io/my-game/
+
+    </script>
+</body>
+</html>
